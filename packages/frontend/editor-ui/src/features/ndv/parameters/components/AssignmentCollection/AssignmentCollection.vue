@@ -45,14 +45,18 @@ const i18n = useI18n();
 const expressionLocalResolveCtx = inject(ExpressionLocalResolveContextSymbol, undefined);
 const dropAreaContainer = useTemplateRef('dropArea');
 
-const state = reactive<{ paramValue: AssignmentCollectionValue }>({
-	paramValue: {
+function createParamValue(value: AssignmentCollectionValue): AssignmentCollectionValue {
+	return {
 		assignments:
-			props.value.assignments?.map((assignment) => {
+			value.assignments?.map((assignment) => {
 				if (!assignment.id) assignment.id = crypto.randomUUID();
 				return assignment;
 			}) ?? [],
-	},
+	};
+}
+
+const state = reactive<{ paramValue: AssignmentCollectionValue }>({
+	paramValue: createParamValue(props.value),
 });
 
 const ndvStore = useNDVStore();
@@ -81,6 +85,13 @@ const actions = computed(() => {
 		},
 	];
 });
+
+watch(
+	() => props.value,
+	(newValue) => {
+		state.paramValue = createParamValue(newValue);
+	},
+);
 
 watch(state.paramValue, (value) => {
 	void callDebounced(
